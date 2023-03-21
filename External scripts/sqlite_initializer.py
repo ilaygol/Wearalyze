@@ -59,7 +59,7 @@ epochs_keys = ['userId', 'userAccessToken', 'summaryId', 'activityType', 'active
 
 def init_manually_updated_activities_table():
     cursor.execute("""CREATE TABLE manuallyupdatedactivities (
-                        shortUserId text,
+                        shortUserAccessToken text,
                         userId text,
                         userAccessToken text,
                         summaryId text,
@@ -90,7 +90,7 @@ def insert_rows_to_updated_activities_table(dict_arr):
         v_dict = dict_arr[i]
         cursor.execute(
             "INSERT INTO manuallyupdatedactivities VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (mapping_dict[v_dict[manual_upd_act_keys[0]]],
+            (mapping_dict.get(v_dict[manual_upd_act_keys[1]], "999"),
              v_dict[manual_upd_act_keys[0]], v_dict[manual_upd_act_keys[1]], v_dict[manual_upd_act_keys[2]], v_dict[manual_upd_act_keys[3]],
              v_dict[manual_upd_act_keys[4]], v_dict[manual_upd_act_keys[5]], v_dict[manual_upd_act_keys[6]], v_dict[manual_upd_act_keys[7]],
              v_dict[manual_upd_act_keys[8]], v_dict[manual_upd_act_keys[9]], v_dict[manual_upd_act_keys[10]], v_dict[manual_upd_act_keys[11]],
@@ -102,7 +102,7 @@ def insert_rows_to_updated_activities_table(dict_arr):
 
 def init_activity_files_table():
     cursor.execute("""CREATE TABLE activityfiles (
-                            shortUserId text,
+                            shortUserAccessToken text,
                             userId text,
                             userAccessToken text,
                             summaryId text,
@@ -121,7 +121,7 @@ def insert_rows_to_activity_files_table(dict_arr):
         v_dict = dict_arr[i]
         cursor.execute(
             "INSERT INTO activityfiles VALUES (?,?,?,?,?,?,?,?,?,?)",
-            (mapping_dict[v_dict[act_files_keys[0]]],
+            (mapping_dict.get(v_dict[act_files_keys[1]], "999"),
              v_dict[act_files_keys[0]], v_dict[act_files_keys[1]],
              v_dict[act_files_keys[2]], v_dict[act_files_keys[3]],
              v_dict[act_files_keys[4]], v_dict[act_files_keys[5]],
@@ -132,7 +132,7 @@ def insert_rows_to_activity_files_table(dict_arr):
 
 def init_sleeps_table():
     cursor.execute("""CREATE TABLE sleeps (
-                                shortUserId text,
+                                shortUserAccessToken text,
                                 userId text,
                                 userAccessToken text,
                                 summaryId text,
@@ -148,7 +148,7 @@ def insert_rows_to_sleeps_table(dict_arr):
         v_dict = dict_arr[i]
         cursor.execute(
             "INSERT INTO sleeps VALUES (?,?,?,?,?,?,?)",
-            (mapping_dict[v_dict[sleeps_keys[0]]],
+            (mapping_dict.get(v_dict[sleeps_keys[1]], "999"),
              v_dict[sleeps_keys[0]], v_dict[sleeps_keys[1]], v_dict[sleeps_keys[2]], v_dict[sleeps_keys[3]],
              int(v_dict[sleeps_keys[4]]), v_dict[sleeps_keys[5]]))
         connector.commit()
@@ -156,7 +156,7 @@ def insert_rows_to_sleeps_table(dict_arr):
 
 def init_pulseox_table():
     cursor.execute("""CREATE TABLE pulseox (
-                                   shortUserId text,
+                                   shortUserAccessToken text,
                                    userId text,
                                    userAccessToken text,
                                    summaryId text,
@@ -175,7 +175,7 @@ def insert_rows_to_pulseox_table(dict_arr):
         v_dict = dict_arr[i]
         cursor.execute(
             "INSERT INTO pulseox VALUES (?,?,?,?,?,?,?,?,?,?)",
-            (mapping_dict[v_dict[pulse_keys[0]]],
+            (mapping_dict.get(v_dict[pulse_keys[1]], "999"),
              v_dict[pulse_keys[0]], v_dict[pulse_keys[1]],
              v_dict[pulse_keys[2]], v_dict[pulse_keys[3]],
              v_dict[pulse_keys[4]], v_dict[pulse_keys[5]],
@@ -186,7 +186,7 @@ def insert_rows_to_pulseox_table(dict_arr):
 
 def init_user_permissions_change_table():
     cursor.execute("""CREATE TABLE userpermissionschange (
-                                       shortUserId text,
+                                       shortUserAccessToken text,
                                        userId text,
                                        userAccessToken text,
                                        summaryId text,
@@ -201,7 +201,7 @@ def insert_rows_to_user_permissions_change_table(dict_arr):
         v_dict = dict_arr[i]
         cursor.execute(
             "INSERT INTO userpermissionschange VALUES (?,?,?,?,?,?)",
-            (mapping_dict[v_dict[permission_keys[0]]],
+            (mapping_dict.get(v_dict[permission_keys[1]], "999"),
              v_dict[permission_keys[0]], v_dict[permission_keys[1]], v_dict[permission_keys[2]],
              pickle.dumps(v_dict[permission_keys[3]]), v_dict[permission_keys[4]]))
         connector.commit()
@@ -209,7 +209,7 @@ def insert_rows_to_user_permissions_change_table(dict_arr):
 
 def init_dailies_table():
     cursor.execute("""CREATE TABLE dailies (
-                                       shortUserId text,
+                                       shortUserAccessToken text,
                                        userId text,
                                        userAccessToken text,
                                        summaryId text,
@@ -226,7 +226,7 @@ def insert_rows_to_dailies_table(dict_arr):
         v_dict = dict_arr[i]
         cursor.execute(
             "INSERT INTO dailies VALUES (?,?,?,?,?,?,?,?)",
-            (mapping_dict[v_dict.get(dailies_keys[0])],
+            (mapping_dict.get(v_dict.get(dailies_keys[1]), "999"),
              v_dict.get(dailies_keys[0], '0'), v_dict.get(dailies_keys[1], '0'), v_dict.get(dailies_keys[2], '0'),
              v_dict.get(dailies_keys[3], '0'), int(v_dict.get(dailies_keys[4], 0)), int(v_dict.get(dailies_keys[5], 0)),
              int(v_dict.get(dailies_keys[6], 0))))
@@ -235,7 +235,7 @@ def insert_rows_to_dailies_table(dict_arr):
 
 def init_user_metrics_table():
     cursor.execute("""CREATE TABLE usermetrics (
-                                       shortUserId text,
+                                       shortUserAccessToken text,
                                        userId text,
                                        userAccessToken text,
                                        summaryId text,
@@ -252,7 +252,7 @@ def insert_rows_to_user_metrics_table(dict_arr):
         v_dict = dict_arr[i]
         cursor.execute(
             "INSERT INTO usermetrics VALUES (?,?,?,?,?,?,?,?)",
-            (mapping_dict[v_dict[metrics_keys[0]]],
+            (mapping_dict.get(v_dict[metrics_keys[1]], "999"),
              v_dict[metrics_keys[0]], v_dict[metrics_keys[1]],
              v_dict[metrics_keys[2]], v_dict[metrics_keys[3]],
              v_dict[metrics_keys[4]], v_dict.get(metrics_keys[5], "-1"),
@@ -262,7 +262,7 @@ def insert_rows_to_user_metrics_table(dict_arr):
 
 def init_move_iq_activities_table():
     cursor.execute("""CREATE TABLE moveiqactivities (
-                                       shortUserId text,
+                                       shortUserAccessToken text,
                                        userId text,
                                        userAccessToken text,
                                        summaryId text,
@@ -280,7 +280,7 @@ def insert_rows_to_move_iq_activities_table(dict_arr):
         v_dict = dict_arr[i]
         cursor.execute(
             "INSERT INTO moveiqactivities VALUES (?,?,?,?,?,?,?,?,?)",
-            (mapping_dict[v_dict[move_iq_act_keys[0]]],
+            (mapping_dict.get(v_dict[move_iq_act_keys[1]], "999"),
              v_dict[move_iq_act_keys[0]], v_dict[move_iq_act_keys[1]],
              v_dict[move_iq_act_keys[2]], v_dict[move_iq_act_keys[3]],
              v_dict[move_iq_act_keys[4]], v_dict[move_iq_act_keys[5]],
@@ -290,7 +290,7 @@ def insert_rows_to_move_iq_activities_table(dict_arr):
 
 def init_body_comps_table():
     cursor.execute("""CREATE TABLE bodycomps (
-                                       shortUserId text,
+                                       shortUserAccessToken text,
                                        userId text,
                                        userAccessToken text,
                                        summaryId text,
@@ -306,7 +306,7 @@ def insert_rows_to_body_comps_table(dict_arr):
         v_dict = dict_arr[i]
         cursor.execute(
             "INSERT INTO bodycomps VALUES (?,?,?,?,?,?,?)",
-            (mapping_dict[v_dict[body_comps_keys[0]]],
+            (mapping_dict.get(v_dict[body_comps_keys[1]], "999"),
              v_dict[body_comps_keys[0]], v_dict[body_comps_keys[1]],
              v_dict[body_comps_keys[2]], v_dict[body_comps_keys[3]],
              v_dict[body_comps_keys[4]], v_dict[body_comps_keys[5]]))
@@ -315,7 +315,7 @@ def insert_rows_to_body_comps_table(dict_arr):
 
 def init_stress_details_table():
     cursor.execute("""CREATE TABLE stressdetails (
-                                shortUserId text,
+                                shortUserAccessToken text,
                                 userId text,
                                 userAccessToken text,
                                 summaryId text,
@@ -334,7 +334,7 @@ def insert_rows_to_stress_details_table(dict_arr):
         v_dict = dict_arr[i]
         cursor.execute(
             "INSERT INTO stressdetails VALUES (?,?,?,?,?,?,?,?,?,?)",
-            (mapping_dict[v_dict[stress_details_keys[0]]],
+            (mapping_dict.get(v_dict[stress_details_keys[1]], "999"),
              v_dict[stress_details_keys[0]], v_dict[stress_details_keys[1]],
              v_dict[stress_details_keys[2]], v_dict[stress_details_keys[3]],
              v_dict[stress_details_keys[4]], v_dict[stress_details_keys[5]],
@@ -345,7 +345,7 @@ def insert_rows_to_stress_details_table(dict_arr):
 
 def init_all_day_respiration_table():
     cursor.execute("""CREATE TABLE alldayrespiration (
-                                       shortUserId text,
+                                       shortUserAccessToken text,
                                        userId text,
                                        userAccessToken text,
                                        summaryId text,
@@ -362,7 +362,7 @@ def insert_rows_to_all_day_respiration_table(dict_arr):
         v_dict = dict_arr[i]
         cursor.execute(
             "INSERT INTO alldayrespiration VALUES (?,?,?,?,?,?,?,?)",
-            (mapping_dict[v_dict[all_day_respiration_keys[0]]],
+            (mapping_dict.get(v_dict[all_day_respiration_keys[1]], "999"),
              v_dict[all_day_respiration_keys[0]], v_dict[all_day_respiration_keys[1]],
              v_dict[all_day_respiration_keys[2]], v_dict[all_day_respiration_keys[3]],
              v_dict[all_day_respiration_keys[4]], v_dict[all_day_respiration_keys[5]],
@@ -372,7 +372,7 @@ def insert_rows_to_all_day_respiration_table(dict_arr):
 
 def init_activities_table():
     cursor.execute("""CREATE TABLE activities (
-                                       shortUserId text,
+                                       shortUserAccessToken text,
                                        userId text,
                                        userAccessToken text,
                                        summaryId text,
@@ -395,7 +395,7 @@ def insert_rows_to_activities_table(dict_arr):
         v_dict = dict_arr[i]
         cursor.execute(
             "INSERT INTO activities VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (mapping_dict[v_dict[activities_keys[0]]],
+            (mapping_dict.get(v_dict[activities_keys[1]], "999"),
              v_dict[activities_keys[0]], v_dict[activities_keys[1]], v_dict[activities_keys[2]], v_dict[activities_keys[3]],
              v_dict[activities_keys[4]], v_dict.get(activities_keys[5], '0'), v_dict[activities_keys[6]], v_dict[activities_keys[7]],
              v_dict[activities_keys[8]], v_dict.get(activities_keys[9], '0'), v_dict.get(activities_keys[10], '0'), v_dict[activities_keys[11]],
@@ -405,7 +405,7 @@ def insert_rows_to_activities_table(dict_arr):
 
 def init_activity_details_table():
     cursor.execute("""CREATE TABLE activitydetails (
-                                       shortUserId text,
+                                       shortUserAccessToken text,
                                        userId text,
                                        userAccessToken text,
                                        summaryId text,
@@ -422,7 +422,7 @@ def insert_rows_to_activity_details_table(dict_arr):
         v_dict = dict_arr[i]
         cursor.execute(
             "INSERT INTO activitydetails VALUES (?,?,?,?,?,?,?,?)",
-            (mapping_dict[v_dict[activity_details_keys[0]]],
+            (mapping_dict.get(v_dict[activity_details_keys[1]], "999"),
              v_dict[activity_details_keys[0]], v_dict[activity_details_keys[1]],
              v_dict[activity_details_keys[2]], v_dict[activity_details_keys[3]],
              pickle.dumps(v_dict[activity_details_keys[4]]), pickle.dumps(v_dict[activity_details_keys[5]]),
@@ -432,7 +432,7 @@ def insert_rows_to_activity_details_table(dict_arr):
 
 def init_epochs_table():
     cursor.execute("""CREATE TABLE epochs (
-                                       shortUserId text,
+                                       shortUserAccessToken text,
                                        userId text,
                                        userAccessToken text,
                                        summaryId text,
@@ -457,7 +457,7 @@ def insert_rows_to_epochs_table(dict_arr):
         v_dict = dict_arr[i]
         cursor.execute(
             "INSERT INTO epochs VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (mapping_dict[v_dict[epochs_keys[0]]],
+            (mapping_dict.get(v_dict[epochs_keys[1]], "999"),
              v_dict[epochs_keys[0]], v_dict[epochs_keys[1]], v_dict[epochs_keys[2]], v_dict[epochs_keys[3]],
              v_dict[epochs_keys[4]], v_dict[epochs_keys[5]], v_dict[epochs_keys[6]], v_dict[epochs_keys[7]],
              v_dict[epochs_keys[8]], v_dict[epochs_keys[9]], v_dict[epochs_keys[10]], v_dict[epochs_keys[11]],
@@ -491,7 +491,6 @@ def fill_database_from_file(filename: str = file_name):
             v_dict_arr = list(measurement.values())[0]
             if measurement_attribute == "dailies":
                 insert_rows_to_dailies_table(v_dict_arr)
-            """
             try:
                 match measurement_attribute:
                     case "manuallyUpdatedActivities":
@@ -529,7 +528,6 @@ def fill_database_from_file(filename: str = file_name):
                     "userId"] + " were added to " + measurement_attribute.lower() + " table")
             except:
                 logging.error("failed to insert row to "+measurement_attribute+" table, unMatching attributes")
-            """
     logging.info("database was filled with '"+filename+"' file data successfully")
 
 
