@@ -9,10 +9,10 @@ import pickle
 
 logging.basicConfig(level=logging.DEBUG)
 
-connector = sqlite3.connect(":memory:")
+connector = sqlite3.connect("../Extras/reading.db")
 cursor = connector.cursor()
 
-file_name = "readings-clean.csv"
+file_name = "../Extras/readings-clean.csv"
 
 
 # ------userId to shortUserId dictionary (for mapping) ----------------
