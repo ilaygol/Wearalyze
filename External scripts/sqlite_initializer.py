@@ -8,12 +8,14 @@ import pickle
 # ----------------------------------------
 
 logging.basicConfig(level=logging.DEBUG)
-
-connector = sqlite3.connect("../Extras/reading.db")
+# ../Extras/readings.db
+connector = sqlite3.connect("../Extras/readings.db")
 cursor = connector.cursor()
 
 file_name = "../Extras/readings-clean.csv"
 
+reading_lines_count = 1
+all_cmd = set()
 
 # ------userId to shortUserId dictionary (for mapping) ----------------
 mapping_dict = {'6ad70fdf-64d6-45aa-a138-db324bbc0412': '101', '6214ab65-2483-41e6-889f-82809290cb1e': '102', '11e75103-409e-467d-8204-4a280e14b19b': '105',
@@ -57,6 +59,18 @@ epochs_keys = ['userId', 'userAccessToken', 'summaryId', 'activityType', 'active
 # ---------------------------------------------------------------------
 
 
+def insert_new_line_to_database(input_cmd, table, user_id):
+    if input_cmd not in all_cmd:
+        cursor.execute(*input_cmd)
+        connector.commit()
+        all_cmd.add(input_cmd)
+        logging.debug("new line with user id " + user_id + " was added to " + table + " table. (reading count: " + str(
+            reading_lines_count) + ")")
+    else:
+        logging.error("inserting line with user id " + user_id + " to " + table + " table failed, since it was a duplicate of previous line. (reading count: " + str(
+            reading_lines_count) + ")")
+
+
 def init_manually_updated_activities_table():
     cursor.execute("""CREATE TABLE manuallyupdatedactivities (
                         shortUserAccessToken text,
@@ -88,16 +102,16 @@ def init_manually_updated_activities_table():
 def insert_rows_to_updated_activities_table(dict_arr):
     for i in range(len(dict_arr)):
         v_dict = dict_arr[i]
-        cursor.execute(
-            "INSERT INTO manuallyupdatedactivities VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (mapping_dict.get(v_dict[manual_upd_act_keys[1]], "999"),
-             v_dict[manual_upd_act_keys[0]], v_dict[manual_upd_act_keys[1]], v_dict[manual_upd_act_keys[2]], v_dict[manual_upd_act_keys[3]],
-             v_dict[manual_upd_act_keys[4]], v_dict[manual_upd_act_keys[5]], v_dict[manual_upd_act_keys[6]], v_dict[manual_upd_act_keys[7]],
-             v_dict[manual_upd_act_keys[8]], v_dict[manual_upd_act_keys[9]], v_dict[manual_upd_act_keys[10]], v_dict[manual_upd_act_keys[11]],
-             v_dict[manual_upd_act_keys[12]], v_dict[manual_upd_act_keys[13]], v_dict[manual_upd_act_keys[14]], v_dict[manual_upd_act_keys[15]],
-             v_dict[manual_upd_act_keys[16]], v_dict[manual_upd_act_keys[17]], v_dict[manual_upd_act_keys[18]], v_dict[manual_upd_act_keys[19]],
-             v_dict[manual_upd_act_keys[20]]))
-        connector.commit()
+        cmd = ("INSERT INTO manuallyupdatedactivities VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+               (mapping_dict.get(v_dict[manual_upd_act_keys[1]], "999"),
+                v_dict[manual_upd_act_keys[0]], v_dict[manual_upd_act_keys[1]], v_dict[manual_upd_act_keys[2]], v_dict[manual_upd_act_keys[3]],
+                v_dict[manual_upd_act_keys[4]], v_dict[manual_upd_act_keys[5]], v_dict[manual_upd_act_keys[6]], v_dict[manual_upd_act_keys[7]],
+                v_dict[manual_upd_act_keys[8]], v_dict[manual_upd_act_keys[9]], v_dict[manual_upd_act_keys[10]], v_dict[manual_upd_act_keys[11]],
+                v_dict[manual_upd_act_keys[12]], v_dict[manual_upd_act_keys[13]], v_dict[manual_upd_act_keys[14]], v_dict[manual_upd_act_keys[15]],
+                v_dict[manual_upd_act_keys[16]], v_dict[manual_upd_act_keys[17]], v_dict[manual_upd_act_keys[18]], v_dict[manual_upd_act_keys[19]],
+                v_dict[manual_upd_act_keys[20]]))
+
+        insert_new_line_to_database(cmd, 'manuallyupdatedactivities',mapping_dict.get(v_dict[manual_upd_act_keys[1]], "999"))
 
 
 def init_activity_files_table():
@@ -119,15 +133,15 @@ def init_activity_files_table():
 def insert_rows_to_activity_files_table(dict_arr):
     for i in range(len(dict_arr)):
         v_dict = dict_arr[i]
-        cursor.execute(
-            "INSERT INTO activityfiles VALUES (?,?,?,?,?,?,?,?,?,?)",
+        cmd = ("INSERT INTO activityfiles VALUES (?,?,?,?,?,?,?,?,?,?)",
             (mapping_dict.get(v_dict[act_files_keys[1]], "999"),
              v_dict[act_files_keys[0]], v_dict[act_files_keys[1]],
              v_dict[act_files_keys[2]], v_dict[act_files_keys[3]],
              v_dict[act_files_keys[4]], v_dict[act_files_keys[5]],
              v_dict[act_files_keys[6]], pickle.dumps(v_dict[act_files_keys[7]]),
              pickle.dumps(v_dict[act_files_keys[8]])))
-        connector.commit()
+
+        insert_new_line_to_database(cmd, 'activityfiles', mapping_dict.get(v_dict[act_files_keys[1]], "999"))
 
 
 def init_sleeps_table():
@@ -146,12 +160,12 @@ def init_sleeps_table():
 def insert_rows_to_sleeps_table(dict_arr):
     for i in range(len(dict_arr)):
         v_dict = dict_arr[i]
-        cursor.execute(
-            "INSERT INTO sleeps VALUES (?,?,?,?,?,?,?)",
-            (mapping_dict.get(v_dict[sleeps_keys[1]], "999"),
-             v_dict[sleeps_keys[0]], v_dict[sleeps_keys[1]], v_dict[sleeps_keys[2]], v_dict[sleeps_keys[3]],
-             int(v_dict[sleeps_keys[4]]), v_dict[sleeps_keys[5]]))
-        connector.commit()
+        cmd = ("INSERT INTO sleeps VALUES (?,?,?,?,?,?,?)",
+               (mapping_dict.get(v_dict[sleeps_keys[1]], "999"),
+                v_dict[sleeps_keys[0]], v_dict[sleeps_keys[1]], v_dict[sleeps_keys[2]], v_dict[sleeps_keys[3]],
+                int(v_dict[sleeps_keys[4]]), v_dict[sleeps_keys[5]]))
+
+        insert_new_line_to_database(cmd, 'sleeps', mapping_dict.get(v_dict[sleeps_keys[1]], "999"))
 
 
 def init_pulseox_table():
@@ -173,15 +187,15 @@ def init_pulseox_table():
 def insert_rows_to_pulseox_table(dict_arr):
     for i in range(len(dict_arr)):
         v_dict = dict_arr[i]
-        cursor.execute(
-            "INSERT INTO pulseox VALUES (?,?,?,?,?,?,?,?,?,?)",
-            (mapping_dict.get(v_dict[pulse_keys[1]], "999"),
-             v_dict[pulse_keys[0]], v_dict[pulse_keys[1]],
-             v_dict[pulse_keys[2]], v_dict[pulse_keys[3]],
-             v_dict[pulse_keys[4]], v_dict[pulse_keys[5]],
-             v_dict[pulse_keys[6]], pickle.dumps(v_dict[pulse_keys[7]]),
-             v_dict[pulse_keys[8]]))
-        connector.commit()
+        cmd = ("INSERT INTO pulseox VALUES (?,?,?,?,?,?,?,?,?,?)",
+               (mapping_dict.get(v_dict[pulse_keys[1]], "999"),
+                v_dict[pulse_keys[0]], v_dict[pulse_keys[1]],
+                v_dict[pulse_keys[2]], v_dict[pulse_keys[3]],
+                v_dict[pulse_keys[4]], v_dict[pulse_keys[5]],
+                v_dict[pulse_keys[6]], pickle.dumps(v_dict[pulse_keys[7]]),
+                v_dict[pulse_keys[8]]))
+
+        insert_new_line_to_database(cmd, 'pulseox', mapping_dict.get(v_dict[pulse_keys[1]], "999"))
 
 
 def init_user_permissions_change_table():
@@ -199,12 +213,12 @@ def init_user_permissions_change_table():
 def insert_rows_to_user_permissions_change_table(dict_arr):
     for i in range(len(dict_arr)):
         v_dict = dict_arr[i]
-        cursor.execute(
-            "INSERT INTO userpermissionschange VALUES (?,?,?,?,?,?)",
-            (mapping_dict.get(v_dict[permission_keys[1]], "999"),
-             v_dict[permission_keys[0]], v_dict[permission_keys[1]], v_dict[permission_keys[2]],
-             pickle.dumps(v_dict[permission_keys[3]]), v_dict[permission_keys[4]]))
-        connector.commit()
+        cmd = ("INSERT INTO userpermissionschange VALUES (?,?,?,?,?,?)",
+               (mapping_dict.get(v_dict[permission_keys[1]], "999"),
+                v_dict[permission_keys[0]], v_dict[permission_keys[1]], v_dict[permission_keys[2]],
+                pickle.dumps(v_dict[permission_keys[3]]), v_dict[permission_keys[4]]))
+
+        insert_new_line_to_database(cmd, 'userpermissionschange', mapping_dict.get(v_dict[permission_keys[1]], "999"))
 
 
 def init_dailies_table():
@@ -224,13 +238,13 @@ def init_dailies_table():
 def insert_rows_to_dailies_table(dict_arr):
     for i in range(len(dict_arr)):
         v_dict = dict_arr[i]
-        cursor.execute(
-            "INSERT INTO dailies VALUES (?,?,?,?,?,?,?,?)",
-            (mapping_dict.get(v_dict.get(dailies_keys[1]), "999"),
-             v_dict.get(dailies_keys[0], '0'), v_dict.get(dailies_keys[1], '0'), v_dict.get(dailies_keys[2], '0'),
-             v_dict.get(dailies_keys[3], '0'), int(v_dict.get(dailies_keys[4], 0)), int(v_dict.get(dailies_keys[5], 0)),
-             int(v_dict.get(dailies_keys[6], 0))))
-        connector.commit()
+        cmd = ("INSERT INTO dailies VALUES (?,?,?,?,?,?,?,?)",
+               (mapping_dict.get(v_dict.get(dailies_keys[1]), "999"),
+                v_dict.get(dailies_keys[0], '0'), v_dict.get(dailies_keys[1], '0'), v_dict.get(dailies_keys[2], '0'),
+                v_dict.get(dailies_keys[3], '0'), int(v_dict.get(dailies_keys[4], 0)), int(v_dict.get(dailies_keys[5], 0)),
+                int(v_dict.get(dailies_keys[6], 0))))
+
+        insert_new_line_to_database(cmd, 'dailies', mapping_dict.get(v_dict[dailies_keys[1]], "999"))
 
 
 def init_user_metrics_table():
@@ -250,14 +264,14 @@ def init_user_metrics_table():
 def insert_rows_to_user_metrics_table(dict_arr):
     for i in range(len(dict_arr)):
         v_dict = dict_arr[i]
-        cursor.execute(
-            "INSERT INTO usermetrics VALUES (?,?,?,?,?,?,?,?)",
-            (mapping_dict.get(v_dict[metrics_keys[1]], "999"),
-             v_dict[metrics_keys[0]], v_dict[metrics_keys[1]],
-             v_dict[metrics_keys[2]], v_dict[metrics_keys[3]],
-             v_dict[metrics_keys[4]], v_dict.get(metrics_keys[5], "-1"),
-             v_dict[metrics_keys[6]]))
-        connector.commit()
+        cmd = ("INSERT INTO usermetrics VALUES (?,?,?,?,?,?,?,?)",
+               (mapping_dict.get(v_dict[metrics_keys[1]], "999"),
+                v_dict[metrics_keys[0]], v_dict[metrics_keys[1]],
+                v_dict[metrics_keys[2]], v_dict[metrics_keys[3]],
+                v_dict[metrics_keys[4]], v_dict.get(metrics_keys[5], "-1"),
+                v_dict[metrics_keys[6]]))
+
+        insert_new_line_to_database(cmd, 'usermetrics', mapping_dict.get(v_dict[metrics_keys[1]], "999"))
 
 
 def init_move_iq_activities_table():
@@ -278,14 +292,14 @@ def init_move_iq_activities_table():
 def insert_rows_to_move_iq_activities_table(dict_arr):
     for i in range(len(dict_arr)):
         v_dict = dict_arr[i]
-        cursor.execute(
-            "INSERT INTO moveiqactivities VALUES (?,?,?,?,?,?,?,?,?)",
-            (mapping_dict.get(v_dict[move_iq_act_keys[1]], "999"),
-             v_dict[move_iq_act_keys[0]], v_dict[move_iq_act_keys[1]],
-             v_dict[move_iq_act_keys[2]], v_dict[move_iq_act_keys[3]],
-             v_dict[move_iq_act_keys[4]], v_dict[move_iq_act_keys[5]],
-             v_dict[move_iq_act_keys[6]], v_dict[move_iq_act_keys[7]]))
-        connector.commit()
+        cmd = ("INSERT INTO moveiqactivities VALUES (?,?,?,?,?,?,?,?,?)",
+               (mapping_dict.get(v_dict[move_iq_act_keys[1]], "999"),
+                v_dict[move_iq_act_keys[0]], v_dict[move_iq_act_keys[1]],
+                v_dict[move_iq_act_keys[2]], v_dict[move_iq_act_keys[3]],
+                v_dict[move_iq_act_keys[4]], v_dict[move_iq_act_keys[5]],
+                v_dict[move_iq_act_keys[6]], v_dict[move_iq_act_keys[7]]))
+
+        insert_new_line_to_database(cmd, 'moveiqactivities', mapping_dict.get(v_dict[move_iq_act_keys[1]], "999"))
 
 
 def init_body_comps_table():
@@ -304,13 +318,13 @@ def init_body_comps_table():
 def insert_rows_to_body_comps_table(dict_arr):
     for i in range(len(dict_arr)):
         v_dict = dict_arr[i]
-        cursor.execute(
-            "INSERT INTO bodycomps VALUES (?,?,?,?,?,?,?)",
-            (mapping_dict.get(v_dict[body_comps_keys[1]], "999"),
-             v_dict[body_comps_keys[0]], v_dict[body_comps_keys[1]],
-             v_dict[body_comps_keys[2]], v_dict[body_comps_keys[3]],
-             v_dict[body_comps_keys[4]], v_dict[body_comps_keys[5]]))
-        connector.commit()
+        cmd = ("INSERT INTO bodycomps VALUES (?,?,?,?,?,?,?)",
+               (mapping_dict.get(v_dict[body_comps_keys[1]], "999"),
+                v_dict[body_comps_keys[0]], v_dict[body_comps_keys[1]],
+                v_dict[body_comps_keys[2]], v_dict[body_comps_keys[3]],
+                v_dict[body_comps_keys[4]], v_dict[body_comps_keys[5]]))
+
+        insert_new_line_to_database(cmd, 'bodycomps', mapping_dict.get(v_dict[body_comps_keys[1]], "999"))
 
 
 def init_stress_details_table():
@@ -332,15 +346,15 @@ def init_stress_details_table():
 def insert_rows_to_stress_details_table(dict_arr):
     for i in range(len(dict_arr)):
         v_dict = dict_arr[i]
-        cursor.execute(
-            "INSERT INTO stressdetails VALUES (?,?,?,?,?,?,?,?,?,?)",
-            (mapping_dict.get(v_dict[stress_details_keys[1]], "999"),
-             v_dict[stress_details_keys[0]], v_dict[stress_details_keys[1]],
-             v_dict[stress_details_keys[2]], v_dict[stress_details_keys[3]],
-             v_dict[stress_details_keys[4]], v_dict[stress_details_keys[5]],
-             v_dict[stress_details_keys[6]], pickle.dumps(v_dict[stress_details_keys[7]]),
-             pickle.dumps(v_dict.get(stress_details_keys[8], dict()))))
-        connector.commit()
+        cmd = ("INSERT INTO stressdetails VALUES (?,?,?,?,?,?,?,?,?,?)",
+               (mapping_dict.get(v_dict[stress_details_keys[1]], "999"),
+                v_dict[stress_details_keys[0]], v_dict[stress_details_keys[1]],
+                v_dict[stress_details_keys[2]], v_dict[stress_details_keys[3]],
+                v_dict[stress_details_keys[4]], v_dict[stress_details_keys[5]],
+                v_dict[stress_details_keys[6]], pickle.dumps(v_dict[stress_details_keys[7]]),
+                pickle.dumps(v_dict.get(stress_details_keys[8], dict()))))
+
+        insert_new_line_to_database(cmd, 'stressdetails', mapping_dict.get(v_dict[stress_details_keys[1]], "999"))
 
 
 def init_all_day_respiration_table():
@@ -360,14 +374,14 @@ def init_all_day_respiration_table():
 def insert_rows_to_all_day_respiration_table(dict_arr):
     for i in range(len(dict_arr)):
         v_dict = dict_arr[i]
-        cursor.execute(
-            "INSERT INTO alldayrespiration VALUES (?,?,?,?,?,?,?,?)",
-            (mapping_dict.get(v_dict[all_day_respiration_keys[1]], "999"),
-             v_dict[all_day_respiration_keys[0]], v_dict[all_day_respiration_keys[1]],
-             v_dict[all_day_respiration_keys[2]], v_dict[all_day_respiration_keys[3]],
-             v_dict[all_day_respiration_keys[4]], v_dict[all_day_respiration_keys[5]],
-             pickle.dumps(v_dict[all_day_respiration_keys[6]])))
-        connector.commit()
+        cmd = ("INSERT INTO alldayrespiration VALUES (?,?,?,?,?,?,?,?)",
+               (mapping_dict.get(v_dict[all_day_respiration_keys[1]], "999"),
+                v_dict[all_day_respiration_keys[0]], v_dict[all_day_respiration_keys[1]],
+                v_dict[all_day_respiration_keys[2]], v_dict[all_day_respiration_keys[3]],
+                v_dict[all_day_respiration_keys[4]], v_dict[all_day_respiration_keys[5]],
+                pickle.dumps(v_dict[all_day_respiration_keys[6]])))
+
+        insert_new_line_to_database(cmd, 'alldayrespiration', mapping_dict.get(v_dict[all_day_respiration_keys[1]], "999"))
 
 
 def init_activities_table():
@@ -393,14 +407,14 @@ def init_activities_table():
 def insert_rows_to_activities_table(dict_arr):
     for i in range(len(dict_arr)):
         v_dict = dict_arr[i]
-        cursor.execute(
-            "INSERT INTO activities VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (mapping_dict.get(v_dict[activities_keys[1]], "999"),
-             v_dict[activities_keys[0]], v_dict[activities_keys[1]], v_dict[activities_keys[2]], v_dict[activities_keys[3]],
-             v_dict[activities_keys[4]], v_dict.get(activities_keys[5], '0'), v_dict[activities_keys[6]], v_dict[activities_keys[7]],
-             v_dict[activities_keys[8]], v_dict.get(activities_keys[9], '0'), v_dict.get(activities_keys[10], '0'), v_dict[activities_keys[11]],
-             v_dict.get(activities_keys[12], '0')))
-        connector.commit()
+        cmd = ("INSERT INTO activities VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+               (mapping_dict.get(v_dict[activities_keys[1]], "999"),
+                v_dict[activities_keys[0]], v_dict[activities_keys[1]], v_dict[activities_keys[2]], v_dict[activities_keys[3]],
+                v_dict[activities_keys[4]], v_dict.get(activities_keys[5], '0'), v_dict[activities_keys[6]], v_dict[activities_keys[7]],
+                v_dict[activities_keys[8]], v_dict.get(activities_keys[9], '0'), v_dict.get(activities_keys[10], '0'), v_dict[activities_keys[11]],
+                v_dict.get(activities_keys[12], '0')))
+
+        insert_new_line_to_database(cmd, 'activities', mapping_dict.get(v_dict[activities_keys[1]], "999"))
 
 
 def init_activity_details_table():
@@ -420,14 +434,14 @@ def init_activity_details_table():
 def insert_rows_to_activity_details_table(dict_arr):
     for i in range(len(dict_arr)):
         v_dict = dict_arr[i]
-        cursor.execute(
-            "INSERT INTO activitydetails VALUES (?,?,?,?,?,?,?,?)",
-            (mapping_dict.get(v_dict[activity_details_keys[1]], "999"),
-             v_dict[activity_details_keys[0]], v_dict[activity_details_keys[1]],
-             v_dict[activity_details_keys[2]], v_dict[activity_details_keys[3]],
-             pickle.dumps(v_dict[activity_details_keys[4]]), pickle.dumps(v_dict[activity_details_keys[5]]),
-             pickle.dumps(v_dict[activity_details_keys[6]])))
-        connector.commit()
+        cmd = ("INSERT INTO activitydetails VALUES (?,?,?,?,?,?,?,?)",
+               (mapping_dict.get(v_dict[activity_details_keys[1]], "999"),
+                v_dict[activity_details_keys[0]], v_dict[activity_details_keys[1]],
+                v_dict[activity_details_keys[2]], v_dict[activity_details_keys[3]],
+                pickle.dumps(v_dict[activity_details_keys[4]]), pickle.dumps(v_dict[activity_details_keys[5]]),
+                pickle.dumps(v_dict[activity_details_keys[6]])))
+
+        insert_new_line_to_database(cmd, 'activitydetails', mapping_dict.get(v_dict[activity_details_keys[1]], "999"))
 
 
 def init_epochs_table():
@@ -455,14 +469,14 @@ def init_epochs_table():
 def insert_rows_to_epochs_table(dict_arr):
     for i in range(len(dict_arr)):
         v_dict = dict_arr[i]
-        cursor.execute(
-            "INSERT INTO epochs VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (mapping_dict.get(v_dict[epochs_keys[1]], "999"),
-             v_dict[epochs_keys[0]], v_dict[epochs_keys[1]], v_dict[epochs_keys[2]], v_dict[epochs_keys[3]],
-             v_dict[epochs_keys[4]], v_dict[epochs_keys[5]], v_dict[epochs_keys[6]], v_dict[epochs_keys[7]],
-             v_dict[epochs_keys[8]], v_dict[epochs_keys[9]], v_dict[epochs_keys[10]], v_dict[epochs_keys[11]],
-             v_dict[epochs_keys[12]], v_dict[epochs_keys[13]], v_dict[epochs_keys[14]]))
-        connector.commit()
+        cmd = ("INSERT INTO epochs VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+               (mapping_dict.get(v_dict[epochs_keys[1]], "999"),
+                v_dict[epochs_keys[0]], v_dict[epochs_keys[1]], v_dict[epochs_keys[2]], v_dict[epochs_keys[3]],
+                v_dict[epochs_keys[4]], v_dict[epochs_keys[5]], v_dict[epochs_keys[6]], v_dict[epochs_keys[7]],
+                v_dict[epochs_keys[8]], v_dict[epochs_keys[9]], v_dict[epochs_keys[10]], v_dict[epochs_keys[11]],
+                v_dict[epochs_keys[12]], v_dict[epochs_keys[13]], v_dict[epochs_keys[14]]))
+
+        insert_new_line_to_database(cmd, 'epochs', mapping_dict.get(v_dict[epochs_keys[1]], "999"))
 
 
 def init_database_tables():
@@ -484,7 +498,7 @@ def init_database_tables():
 
 
 def fill_database_from_file(filename: str = file_name):
-    reading_lines_count = 0
+    global reading_lines_count
 
     with open(filename, "r") as file:
         for line in file:
@@ -525,8 +539,6 @@ def fill_database_from_file(filename: str = file_name):
                         logging.error("invalid measurement attribute")
                         continue
                 reading_lines_count += 1
-                logging.debug("new "+str(len(v_dict_arr))+" lines with user id " + v_dict_arr[0][
-                    "userId"] + " were added to " + measurement_attribute.lower() + " table. (reading count: "+str(reading_lines_count)+")")
             except:
                 reading_lines_count += 1
                 logging.error("failed to insert row to "+measurement_attribute+" table, unMatching attributes. (reading count: "+str(reading_lines_count)+")")
