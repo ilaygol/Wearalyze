@@ -484,13 +484,13 @@ def init_database_tables():
 
 
 def fill_database_from_file(filename: str = file_name):
+    reading_lines_count = 0
+
     with open(filename, "r") as file:
         for line in file:
             measurement = json.loads(line)
             measurement_attribute = list(measurement.keys())[0]
             v_dict_arr = list(measurement.values())[0]
-            if measurement_attribute == "dailies":
-                insert_rows_to_dailies_table(v_dict_arr)
             try:
                 match measurement_attribute:
                     case "manuallyUpdatedActivities":
@@ -524,10 +524,12 @@ def fill_database_from_file(filename: str = file_name):
                     case _:
                         logging.error("invalid measurement attribute")
                         continue
+                reading_lines_count += 1
                 logging.debug("new "+str(len(v_dict_arr))+" lines with user id " + v_dict_arr[0][
-                    "userId"] + " were added to " + measurement_attribute.lower() + " table")
+                    "userId"] + " were added to " + measurement_attribute.lower() + " table. (reading count: "+str(reading_lines_count)+")")
             except:
-                logging.error("failed to insert row to "+measurement_attribute+" table, unMatching attributes")
+                reading_lines_count += 1
+                logging.error("failed to insert row to "+measurement_attribute+" table, unMatching attributes. (reading count: "+str(reading_lines_count)+")")
     logging.info("database was filled with '"+filename+"' file data successfully")
 
 
