@@ -2,6 +2,7 @@ import json
 import logging
 import sqlite3
 import pickle
+import datetime
 
 # comments -------------------------------
 
@@ -150,8 +151,10 @@ def init_sleeps_table():
                                 userId text,
                                 userAccessToken text,
                                 calendarDate text,
-                                durationInSeconds integer,
-                                startTimeInSeconds text)""")
+                                startTime Text,
+                                durationInHours real,
+                                startTimeInSeconds text,
+                                durationInSeconds integer)""")
     connector.commit()
     logging.debug("sleeps table was created successfully")
 
@@ -159,10 +162,11 @@ def init_sleeps_table():
 def insert_rows_to_sleeps_table(dict_arr):
     for i in range(len(dict_arr)):
         v_dict = dict_arr[i]
-        cmd = ("INSERT INTO sleeps VALUES (?,?,?,?,?,?)",
+        cmd = ("INSERT INTO sleeps VALUES (?,?,?,?,?,?,?,?)",
                (mapping_dict.get(v_dict[sleeps_keys[1]], "999"),
                 v_dict[sleeps_keys[0]], v_dict[sleeps_keys[1]], v_dict[sleeps_keys[3]],
-                int(v_dict[sleeps_keys[4]]), v_dict[sleeps_keys[5]]))
+                datetime.datetime.fromtimestamp(int(v_dict[sleeps_keys[5]])), float("{:.2f}".format(int(v_dict[sleeps_keys[4]])/3600)),
+                int(v_dict[sleeps_keys[5]]), v_dict[sleeps_keys[4]]))
 
         insert_new_line_to_database(cmd, 'sleeps', mapping_dict.get(v_dict[sleeps_keys[1]], "999"))
 
