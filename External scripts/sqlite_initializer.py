@@ -45,7 +45,7 @@ sleeps_keys = ['userId', 'userAccessToken', 'summaryId', 'calendarDate', 'durati
 pulse_keys = ['userId', 'userAccessToken', 'summaryId', 'calendarDate', 'startTimeInSeconds', 'durationInSeconds', 'startTimeOffsetInSeconds', 'timeOffsetSpo2Values', 'onDemand']
 permission_keys = ['userId', 'userAccessToken', 'summaryId', 'permissions', 'changeTimeInSeconds']
 # not all lines has 'averageHeartRateInBeatsPerMinute' attribute, set default to 0 (same lines has 0 steps - logic)
-dailies_keys = ['userId', 'userAccessToken', 'summaryId', 'calendarDate', 'steps', 'averageHeartRateInBeatsPerMinute', 'averageStressLevel']
+dailies_keys = ['userId', 'userAccessToken', 'summaryId', 'calendarDate', 'durationInSeconds', 'steps', 'averageHeartRateInBeatsPerMinute', 'averageStressLevel']
 metrics_keys = ['userId', 'userAccessToken', 'summaryId', 'calendarDate', 'vo2Max', 'fitnessAge', 'enhanced']
 move_iq_act_keys = ['userId', 'userAccessToken', 'summaryId', 'calendarDate', 'startTimeInSeconds', 'durationInSeconds', 'activityType', 'offsetInSeconds']
 body_comps_keys = ['userId', 'userAccessToken', 'summaryId', 'weightInGrams', 'measurementTimeInSeconds', 'measurementTimeOffsetInSeconds']
@@ -149,7 +149,6 @@ def init_sleeps_table():
                                 shortUserAccessToken text,
                                 userId text,
                                 userAccessToken text,
-                                summaryId text,
                                 calendarDate text,
                                 durationInSeconds integer,
                                 startTimeInSeconds text)""")
@@ -160,9 +159,9 @@ def init_sleeps_table():
 def insert_rows_to_sleeps_table(dict_arr):
     for i in range(len(dict_arr)):
         v_dict = dict_arr[i]
-        cmd = ("INSERT INTO sleeps VALUES (?,?,?,?,?,?,?)",
+        cmd = ("INSERT INTO sleeps VALUES (?,?,?,?,?,?)",
                (mapping_dict.get(v_dict[sleeps_keys[1]], "999"),
-                v_dict[sleeps_keys[0]], v_dict[sleeps_keys[1]], v_dict[sleeps_keys[2]], v_dict[sleeps_keys[3]],
+                v_dict[sleeps_keys[0]], v_dict[sleeps_keys[1]], v_dict[sleeps_keys[3]],
                 int(v_dict[sleeps_keys[4]]), v_dict[sleeps_keys[5]]))
 
         insert_new_line_to_database(cmd, 'sleeps', mapping_dict.get(v_dict[sleeps_keys[1]], "999"))
@@ -226,8 +225,8 @@ def init_dailies_table():
                                        shortUserAccessToken text,
                                        userId text,
                                        userAccessToken text,
-                                       summaryId text,
                                        calendarDate text,
+                                       durationInSeconds integer,
                                        steps integer,
                                        averageHeartRateInBeatsPerMinute integer,
                                        averageStressLevel integer)""")
@@ -240,9 +239,9 @@ def insert_rows_to_dailies_table(dict_arr):
         v_dict = dict_arr[i]
         cmd = ("INSERT INTO dailies VALUES (?,?,?,?,?,?,?,?)",
                (mapping_dict.get(v_dict.get(dailies_keys[1]), "999"),
-                v_dict.get(dailies_keys[0], '0'), v_dict.get(dailies_keys[1], '0'), v_dict.get(dailies_keys[2], '0'),
-                v_dict.get(dailies_keys[3], '0'), int(v_dict.get(dailies_keys[4], 0)), int(v_dict.get(dailies_keys[5], 0)),
-                int(v_dict.get(dailies_keys[6], 0))))
+                v_dict.get(dailies_keys[0], '0'), v_dict.get(dailies_keys[1], '0'), v_dict.get(dailies_keys[3], '0'),
+                int(v_dict.get(dailies_keys[4], 0)), (v_dict.get(dailies_keys[5], 0)), int(v_dict.get(dailies_keys[6], 0)),
+                int(v_dict.get(dailies_keys[7], 0))))
 
         insert_new_line_to_database(cmd, 'dailies', mapping_dict.get(v_dict[dailies_keys[1]], "999"))
 
