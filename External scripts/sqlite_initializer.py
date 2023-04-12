@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.DEBUG)
 connector = sqlite3.connect("../Extras/readings.db")
 cursor = connector.cursor()
 
-file_name = "../Extras/debug-file.csv"
+file_name = "../Extras/readings-clean.csv"
 
 reading_lines_count = 1
 all_cmd = set()
@@ -553,9 +553,35 @@ def fill_database_from_file(filename: str = file_name):
     logging.info("database was filled with '"+filename+"' file data successfully")
 
 
+def init_dailies_measurements_table():
+    cursor.execute("""CREATE TABLE dailies_measurements
+                      AS 
+                      SELECT shortUserAccessToken AS id, calendarDate AS date, steps, averageHeartRateInBeatsPerMinute AS average_heart_rate, averageStressLevel AS average_stress_level
+                      FROM dailies
+                      WHERE shortUserAccessToken != '999' AND durationInSeconds = 86400
+                      ORDER BY shortUserAccessToken asc, calendarDate asc""")
+    connector.commit()
+    logging.info("dailies_measurements table was created successfully")
+
+
+def init_sleeps_measurements_table():
+    pass
+
+
+def create_research_table():
+    pass
+
+
+def create_research_tables():
+    init_dailies_measurements_table()
+    init_sleeps_measurements_table()
+    create_research_table()
+
+
 def start_program():
-    init_database_tables()
-    fill_database_from_file()
+    #init_database_tables()
+    #fill_database_from_file()
+    create_research_tables()
 
 
 if __name__ == "__main__":
