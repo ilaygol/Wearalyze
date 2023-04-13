@@ -151,10 +151,12 @@ def init_sleeps_table():
                                 userId text,
                                 userAccessToken text,
                                 calendarDate text,
-                                startTime Text,
+                                startTime text,
                                 durationInHours real,
+                                wakingHour text,
                                 startTimeInSeconds text,
-                                durationInSeconds integer)""")
+                                durationInSeconds integer,
+                                wakingInSeconds text)""")
     connector.commit()
     logging.debug("sleeps table was created successfully")
 
@@ -162,11 +164,14 @@ def init_sleeps_table():
 def insert_rows_to_sleeps_table(dict_arr):
     for i in range(len(dict_arr)):
         v_dict = dict_arr[i]
-        cmd = ("INSERT INTO sleeps VALUES (?,?,?,?,?,?,?,?)",
+        sleeping_date = datetime.datetime.fromtimestamp(int(v_dict[sleeps_keys[5]]))
+        sleeping_duration = float("{:.2f}".format(int(v_dict[sleeps_keys[4]])/3600))
+        waking_date = datetime.datetime.fromtimestamp(int(v_dict[sleeps_keys[5]]) + int(v_dict[sleeps_keys[4]]))
+        cmd = ("INSERT INTO sleeps VALUES (?,?,?,?,?,?,?,?,?,?)",
                (mapping_dict.get(v_dict[sleeps_keys[1]], "999"),
                 v_dict[sleeps_keys[0]], v_dict[sleeps_keys[1]], v_dict[sleeps_keys[3]],
-                datetime.datetime.fromtimestamp(int(v_dict[sleeps_keys[5]])), float("{:.2f}".format(int(v_dict[sleeps_keys[4]])/3600)),
-                int(v_dict[sleeps_keys[5]]), v_dict[sleeps_keys[4]]))
+                sleeping_date, sleeping_duration, waking_date.strftime('%H:%M'),
+                int(v_dict[sleeps_keys[5]]), int(v_dict[sleeps_keys[4]]), str(int(v_dict[sleeps_keys[5]]) + int(v_dict[sleeps_keys[4]]))))
 
         insert_new_line_to_database(cmd, 'sleeps', mapping_dict.get(v_dict[sleeps_keys[1]], "999"))
 
@@ -542,15 +547,41 @@ def fill_database_from_file(filename: str = file_name):
                         logging.error("invalid measurement attribute")
                         continue
                 reading_lines_count += 1
-            except:
+            except KeyError:
                 reading_lines_count += 1
                 logging.error("failed to insert row to "+measurement_attribute+" table, unMatching attributes. (reading count: "+str(reading_lines_count)+")")
     logging.info("database was filled with '"+filename+"' file data successfully")
 
 
+def init_dailies_measurements_table():
+    cursor.execute("""CREATE TABLE dailies_measurements
+                      AS 
+                      SELECT shortUserAccessToken AS id, calendarDate AS date, steps, averageHeartRateInBeatsPerMinute AS average_heart_rate, averageStressLevel AS average_stress_level
+                      FROM dailies
+                      WHERE shortUserAccessToken != '999' AND durationInSeconds = 86400
+                      ORDER BY shortUserAccessToken asc, calendarDate asc""")
+    connector.commit()
+    logging.info("dailies_measurements table was created successfully")
+
+
+def init_sleeps_measurements_table():
+    pass
+
+
+def create_research_table():
+    pass
+
+
+def create_research_tables():
+    init_dailies_measurements_table()
+    init_sleeps_measurements_table()
+    create_research_table()
+
+
 def start_program():
-    init_database_tables()
-    fill_database_from_file()
+    #init_database_tables()
+    #fill_database_from_file()
+    create_research_tables()
 
 
 if __name__ == "__main__":
