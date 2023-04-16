@@ -568,7 +568,7 @@ def init_dailies_measurements_table():
 def init_sleeps_measurements_table():
     cursor.execute("""CREATE TABLE sleeps_measurements
                       AS
-                      SELECT shortUserAccessToken, calendarDate, startTime, max(durationInHours) as sleeping_duration, wakingHour as awake_time
+                      SELECT shortUserAccessToken as id, calendarDate as date, startTime as sleep_start_time, max(durationInHours) as sleeping_duration, wakingHour as awake_time
                       FROM 'sleeps' 
                       WHERE validation LIKE 'ENHANCED%' 
                       GROUP BY shortUserAccessToken, calendarDate;""")
@@ -577,7 +577,24 @@ def init_sleeps_measurements_table():
 
 
 def create_final_table():
-    pass
+    cursor.execute("""CREATE TABLE results_1
+                      AS
+                      SELECT *
+                      FROM dailies_measurements left outer join sleeps_measurements
+                      USING (id, date)
+                      WHERE dailies_measurements.steps > 0 and dailies_measurements.id != '999'
+                      ORDER BY dailies_measurements.id asc, dailies_measurements.date asc""")
+    connector.commit()
+    logging.info("created final results table successfully")
+    cursor.execute("""CREATE TABLE results_2
+                          AS
+                          SELECT *
+                          FROM dailies_measurements  join sleeps_measurements
+                          USING (id, date)
+                          WHERE dailies_measurements.steps > 0 and dailies_measurements.id != '999'
+                          ORDER BY dailies_measurements.id asc, dailies_measurements.date asc""")
+    connector.commit()
+    logging.info("created final results table successfully")
 
 
 def create_research_tables():
@@ -594,3 +611,5 @@ def start_program():
 
 if __name__ == "__main__":
     start_program()
+
+
