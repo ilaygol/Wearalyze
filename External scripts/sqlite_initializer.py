@@ -42,7 +42,7 @@ mapping_dict = {'6ad70fdf-64d6-45aa-a138-db324bbc0412': '101', '6214ab65-2483-41
 # ------------------------Attributes arrays ---------------------------
 manual_upd_act_keys = ['userId', 'userAccessToken', 'summaryId', 'activityId', 'activityName', 'durationInSeconds', 'startTimeInSeconds', 'startTimeOffsetInSeconds', 'activityType', 'averageHeartRateInBeatsPerMinute', 'averageRunCadenceInStepsPerMinute', 'averageSpeedInMetersPerSecond', 'averagePaceInMinutesPerKilometer', 'activeKilocalories', 'deviceName', 'distanceInMeters', 'maxHeartRateInBeatsPerMinute', 'maxPaceInMinutesPerKilometer', 'maxRunCadenceInStepsPerMinute', 'maxSpeedInMetersPerSecond', 'manual']
 act_files_keys = ['userId', 'userAccessToken', 'summaryId', 'fileType', 'callbackURL', 'startTimeInSeconds', 'activityId', 'activityName', 'manual']
-sleeps_keys = ['userId', 'userAccessToken', 'summaryId', 'calendarDate', 'durationInSeconds', 'startTimeInSeconds']
+sleeps_keys = ['userId', 'userAccessToken', 'summaryId', 'calendarDate', 'durationInSeconds', 'startTimeInSeconds', 'validation']
 pulse_keys = ['userId', 'userAccessToken', 'summaryId', 'calendarDate', 'startTimeInSeconds', 'durationInSeconds', 'startTimeOffsetInSeconds', 'timeOffsetSpo2Values', 'onDemand']
 permission_keys = ['userId', 'userAccessToken', 'summaryId', 'permissions', 'changeTimeInSeconds']
 # not all lines has 'averageHeartRateInBeatsPerMinute' attribute, set default to 0 (same lines has 0 steps - logic)
@@ -154,6 +154,7 @@ def init_sleeps_table():
                                 startTime text,
                                 durationInHours real,
                                 wakingHour text,
+                                validation text,
                                 startTimeInSeconds text,
                                 durationInSeconds integer,
                                 wakingInSeconds text)""")
@@ -167,10 +168,10 @@ def insert_rows_to_sleeps_table(dict_arr):
         sleeping_date = datetime.datetime.fromtimestamp(int(v_dict[sleeps_keys[5]]))
         sleeping_duration = float("{:.2f}".format(int(v_dict[sleeps_keys[4]])/3600))
         waking_date = datetime.datetime.fromtimestamp(int(v_dict[sleeps_keys[5]]) + int(v_dict[sleeps_keys[4]]))
-        cmd = ("INSERT INTO sleeps VALUES (?,?,?,?,?,?,?,?,?,?)",
+        cmd = ("INSERT INTO sleeps VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                (mapping_dict.get(v_dict[sleeps_keys[1]], "999"),
                 v_dict[sleeps_keys[0]], v_dict[sleeps_keys[1]], v_dict[sleeps_keys[3]],
-                sleeping_date, sleeping_duration, waking_date.strftime('%H:%M'),
+                sleeping_date, sleeping_duration, waking_date.strftime('%H:%M'), v_dict.get(sleeps_keys[6], 'NO-VALIDATION'),
                 int(v_dict[sleeps_keys[5]]), int(v_dict[sleeps_keys[4]]), str(int(v_dict[sleeps_keys[5]]) + int(v_dict[sleeps_keys[4]]))))
 
         insert_new_line_to_database(cmd, 'sleeps', mapping_dict.get(v_dict[sleeps_keys[1]], "999"))
@@ -565,22 +566,29 @@ def init_dailies_measurements_table():
 
 
 def init_sleeps_measurements_table():
-    pass
+    cursor.execute("""CREATE TABLE sleeps_measurements
+                      AS
+                      SELECT shortUserAccessToken, calendarDate, startTime, max(durationInHours) as sleeping_duration, wakingHour as awake_time
+                      FROM 'sleeps' 
+                      WHERE validation LIKE 'ENHANCED%' 
+                      GROUP BY shortUserAccessToken, calendarDate;""")
+    connector.commit()
+    logging.info("sleeps_measurements table was created successfully")
 
 
-def create_research_table():
+def create_final_table():
     pass
 
 
 def create_research_tables():
     init_dailies_measurements_table()
     init_sleeps_measurements_table()
-    create_research_table()
+    create_final_table()
 
 
 def start_program():
-    #init_database_tables()
-    #fill_database_from_file()
+    init_database_tables()
+    fill_database_from_file()
     create_research_tables()
 
 
