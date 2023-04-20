@@ -489,20 +489,20 @@ def insert_rows_to_epochs_table(dict_arr):
 
 
 def init_database_tables():
-    init_manually_updated_activities_table()
-    init_activity_files_table()
     init_sleeps_table()
-    init_pulseox_table()
-    init_user_permissions_change_table()
     init_dailies_table()
-    init_user_metrics_table()
-    init_move_iq_activities_table()
-    init_body_comps_table()
-    init_stress_details_table()
-    init_all_day_respiration_table()
-    init_activities_table()
-    init_activity_details_table()
-    init_epochs_table()
+    #init_manually_updated_activities_table()
+    #init_activity_files_table()
+    #init_pulseox_table()
+    #init_user_permissions_change_table()
+    #init_user_metrics_table()
+    #init_move_iq_activities_table()
+    #init_body_comps_table()
+    #init_stress_details_table()
+    #init_all_day_respiration_table()
+    #init_activities_table()
+    #init_activity_details_table()
+    #init_epochs_table()
     logging.info("all tables were created successfully")
 
 
@@ -514,40 +514,52 @@ def fill_database_from_file(filename: str = file_name):
             measurement = json.loads(line)
             measurement_attribute = list(measurement.keys())[0]
             v_dict_arr = list(measurement.values())[0]
+            reading_lines_count += 1
             try:
                 match measurement_attribute:
-                    case "manuallyUpdatedActivities":
-                        insert_rows_to_updated_activities_table(v_dict_arr)
-                    case "activityFiles":
-                        insert_rows_to_activity_files_table(v_dict_arr)
                     case "sleeps":
                         insert_rows_to_sleeps_table(v_dict_arr)
-                    case "pulseox":
-                        insert_rows_to_pulseox_table(v_dict_arr)
-                    case "userPermissionsChange":
-                        insert_rows_to_user_permissions_change_table(v_dict_arr)
                     case "dailies":
                         insert_rows_to_dailies_table(v_dict_arr)
+                    case "manuallyUpdatedActivities":
+                        continue
+                        insert_rows_to_updated_activities_table(v_dict_arr)
+                    case "activityFiles":
+                        continue
+                        insert_rows_to_activity_files_table(v_dict_arr)
+                    case "pulseox":
+                        continue
+                        insert_rows_to_pulseox_table(v_dict_arr)
+                    case "userPermissionsChange":
+                        continue
+                        insert_rows_to_user_permissions_change_table(v_dict_arr)
                     case "userMetrics":
+                        continue
                         insert_rows_to_user_metrics_table(v_dict_arr)
                     case "moveIQActivities":
+                        continue
                         insert_rows_to_move_iq_activities_table(v_dict_arr)
                     case "bodyComps":
+                        continue
                         insert_rows_to_body_comps_table(v_dict_arr)
                     case "stressDetails":
+                        continue
                         insert_rows_to_stress_details_table(v_dict_arr)
                     case "allDayRespiration":
+                        continue
                         insert_rows_to_all_day_respiration_table(v_dict_arr)
                     case "activities":
+                        continue
                         insert_rows_to_activities_table(v_dict_arr)
                     case "activityDetails":
+                        continue
                         insert_rows_to_activity_details_table(v_dict_arr)
                     case "epochs":
+                        continue
                         insert_rows_to_epochs_table(v_dict_arr)
                     case _:
                         logging.error("invalid measurement attribute")
                         continue
-                reading_lines_count += 1
             except KeyError:
                 reading_lines_count += 1
                 logging.error("failed to insert row to "+measurement_attribute+" table, unMatching attributes. (reading count: "+str(reading_lines_count)+")")
