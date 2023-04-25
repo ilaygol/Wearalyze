@@ -489,20 +489,20 @@ def insert_rows_to_epochs_table(dict_arr):
 
 
 def init_database_tables():
-    init_manually_updated_activities_table()
-    init_activity_files_table()
     init_sleeps_table()
-    init_pulseox_table()
-    init_user_permissions_change_table()
     init_dailies_table()
-    init_user_metrics_table()
-    init_move_iq_activities_table()
-    init_body_comps_table()
-    init_stress_details_table()
-    init_all_day_respiration_table()
-    init_activities_table()
-    init_activity_details_table()
-    init_epochs_table()
+    #init_manually_updated_activities_table()
+    #init_activity_files_table()
+    #init_pulseox_table()
+    #init_user_permissions_change_table()
+    #init_user_metrics_table()
+    #init_move_iq_activities_table()
+    #init_body_comps_table()
+    #init_stress_details_table()
+    #init_all_day_respiration_table()
+    #init_activities_table()
+    #init_activity_details_table()
+    #init_epochs_table()
     logging.info("all tables were created successfully")
 
 
@@ -514,40 +514,52 @@ def fill_database_from_file(filename: str = file_name):
             measurement = json.loads(line)
             measurement_attribute = list(measurement.keys())[0]
             v_dict_arr = list(measurement.values())[0]
+            reading_lines_count += 1
             try:
                 match measurement_attribute:
-                    case "manuallyUpdatedActivities":
-                        insert_rows_to_updated_activities_table(v_dict_arr)
-                    case "activityFiles":
-                        insert_rows_to_activity_files_table(v_dict_arr)
                     case "sleeps":
                         insert_rows_to_sleeps_table(v_dict_arr)
-                    case "pulseox":
-                        insert_rows_to_pulseox_table(v_dict_arr)
-                    case "userPermissionsChange":
-                        insert_rows_to_user_permissions_change_table(v_dict_arr)
                     case "dailies":
                         insert_rows_to_dailies_table(v_dict_arr)
+                    case "manuallyUpdatedActivities":
+                        continue
+                        insert_rows_to_updated_activities_table(v_dict_arr)
+                    case "activityFiles":
+                        continue
+                        insert_rows_to_activity_files_table(v_dict_arr)
+                    case "pulseox":
+                        continue
+                        insert_rows_to_pulseox_table(v_dict_arr)
+                    case "userPermissionsChange":
+                        continue
+                        insert_rows_to_user_permissions_change_table(v_dict_arr)
                     case "userMetrics":
+                        continue
                         insert_rows_to_user_metrics_table(v_dict_arr)
                     case "moveIQActivities":
+                        continue
                         insert_rows_to_move_iq_activities_table(v_dict_arr)
                     case "bodyComps":
+                        continue
                         insert_rows_to_body_comps_table(v_dict_arr)
                     case "stressDetails":
+                        continue
                         insert_rows_to_stress_details_table(v_dict_arr)
                     case "allDayRespiration":
+                        continue
                         insert_rows_to_all_day_respiration_table(v_dict_arr)
                     case "activities":
+                        continue
                         insert_rows_to_activities_table(v_dict_arr)
                     case "activityDetails":
+                        continue
                         insert_rows_to_activity_details_table(v_dict_arr)
                     case "epochs":
+                        continue
                         insert_rows_to_epochs_table(v_dict_arr)
                     case _:
                         logging.error("invalid measurement attribute")
                         continue
-                reading_lines_count += 1
             except KeyError:
                 reading_lines_count += 1
                 logging.error("failed to insert row to "+measurement_attribute+" table, unMatching attributes. (reading count: "+str(reading_lines_count)+")")
@@ -568,7 +580,7 @@ def init_dailies_measurements_table():
 def init_sleeps_measurements_table():
     cursor.execute("""CREATE TABLE sleeps_measurements
                       AS
-                      SELECT shortUserAccessToken, calendarDate, startTime, max(durationInHours) as sleeping_duration, wakingHour as awake_time
+                      SELECT shortUserAccessToken as id, calendarDate as date, startTime as sleep_start_time, max(durationInHours) as sleeping_duration, wakingHour as awake_time
                       FROM 'sleeps' 
                       WHERE validation LIKE 'ENHANCED%' 
                       GROUP BY shortUserAccessToken, calendarDate;""")
@@ -577,7 +589,24 @@ def init_sleeps_measurements_table():
 
 
 def create_final_table():
-    pass
+    cursor.execute("""CREATE TABLE results_1
+                      AS
+                      SELECT *
+                      FROM dailies_measurements left outer join sleeps_measurements
+                      USING (id, date)
+                      WHERE dailies_measurements.steps > 0 and dailies_measurements.id != '999'
+                      ORDER BY dailies_measurements.id asc, dailies_measurements.date asc""")
+    connector.commit()
+    logging.info("created final results table successfully")
+    cursor.execute("""CREATE TABLE results_2
+                          AS
+                          SELECT *
+                          FROM dailies_measurements  join sleeps_measurements
+                          USING (id, date)
+                          WHERE dailies_measurements.steps > 0 and dailies_measurements.id != '999'
+                          ORDER BY dailies_measurements.id asc, dailies_measurements.date asc""")
+    connector.commit()
+    logging.info("created final results table successfully")
 
 
 def create_research_tables():
@@ -594,3 +623,5 @@ def start_program():
 
 if __name__ == "__main__":
     start_program()
+
+

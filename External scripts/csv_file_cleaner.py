@@ -2,8 +2,8 @@ import json
 
 good_lines_counter = 0
 bad_lines_counter = 0
-readings_file = open("readings.csv", "r", encoding="utf8")
-new_file = open("demo.txt", "a")
+readings_file = open("../Extras/readings.csv", "r", encoding="utf8")
+new_file = open("../Extras/readings-clean.csv", "a")
 
 for line in readings_file:
     try:
