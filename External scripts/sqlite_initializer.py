@@ -155,9 +155,9 @@ def init_sleeps_table():
                                 durationInHours real,
                                 wakingHour text,
                                 validation text,
-                                startTimeInSeconds text,
+                                startTimeInSeconds integer,
                                 durationInSeconds integer,
-                                wakingInSeconds text)""")
+                                wakingInSeconds integer)""")
     connector.commit()
     logging.debug("sleeps table was created successfully")
 
@@ -172,7 +172,7 @@ def insert_rows_to_sleeps_table(dict_arr):
                (mapping_dict.get(v_dict[sleeps_keys[1]], "999"),
                 v_dict[sleeps_keys[0]], v_dict[sleeps_keys[1]], v_dict[sleeps_keys[3]],
                 sleeping_date, sleeping_duration, waking_date.strftime('%H:%M'), v_dict.get(sleeps_keys[6], 'NO-VALIDATION'),
-                int(v_dict[sleeps_keys[5]]), int(v_dict[sleeps_keys[4]]), str(int(v_dict[sleeps_keys[5]]) + int(v_dict[sleeps_keys[4]]))))
+                int(v_dict[sleeps_keys[5]]), int(v_dict[sleeps_keys[4]]), int(v_dict[sleeps_keys[5]]) + int(v_dict[sleeps_keys[4]])))
 
         insert_new_line_to_database(cmd, 'sleeps', mapping_dict.get(v_dict[sleeps_keys[1]], "999"))
 
@@ -580,7 +580,7 @@ def init_dailies_measurements_table():
 def init_sleeps_measurements_table():
     cursor.execute("""CREATE TABLE sleeps_measurements
                       AS
-                      SELECT shortUserAccessToken as id, calendarDate as date, startTime as sleep_start_time, max(durationInHours) as sleeping_duration, wakingHour as awake_time
+                      SELECT shortUserAccessToken as id, calendarDate as date, startTime as sleep_start_time, max(durationInHours) as sleeping_duration, wakingHour as awake_time, startTimeInSeconds as start_seconds, durationInSeconds as duration_seconds, wakingInSeconds as waking_seconds
                       FROM 'sleeps' 
                       WHERE validation LIKE 'ENHANCED%' 
                       GROUP BY shortUserAccessToken, calendarDate;""")
@@ -589,22 +589,13 @@ def init_sleeps_measurements_table():
 
 
 def create_final_table():
-    cursor.execute("""CREATE TABLE results_1
+    cursor.execute("""CREATE TABLE results
                       AS
                       SELECT *
                       FROM dailies_measurements left outer join sleeps_measurements
                       USING (id, date)
                       WHERE dailies_measurements.steps > 0 and dailies_measurements.id != '999'
                       ORDER BY dailies_measurements.id asc, dailies_measurements.date asc""")
-    connector.commit()
-    logging.info("created final results table successfully")
-    cursor.execute("""CREATE TABLE results_2
-                          AS
-                          SELECT *
-                          FROM dailies_measurements  join sleeps_measurements
-                          USING (id, date)
-                          WHERE dailies_measurements.steps > 0 and dailies_measurements.id != '999'
-                          ORDER BY dailies_measurements.id asc, dailies_measurements.date asc""")
     connector.commit()
     logging.info("created final results table successfully")
 
