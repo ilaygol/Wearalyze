@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.DEBUG)
 # ../Extras/readings.db
 connector = sqlite3.connect(":memory:")
 cursor = connector.cursor()
-file_path = "../Extras/readings-clean.csv"
+file_path = "../Extras/readings-debug.csv"
 
 reading_lines_count = 1
 all_cmd = set()
@@ -50,7 +50,7 @@ def insert_new_line_to_database(input_cmd, table, user_id):
 def add_graphs_data_to_table(dict_arr):
     for i in range(len(dict_arr)):
         v_dict = dict_arr[i]
-        if v_dict.get('timeOffsetHeartRateSamples') is not None:
+        if len(v_dict.get('timeOffsetHeartRateSamples')) != 0:
             user_id = mapping_dict.get(v_dict.get('userAccessToken'), "999")
             hours_keys_samples_dict = get_hours_samples_dictionary(v_dict.get('timeOffsetHeartRateSamples'))
 
@@ -63,8 +63,8 @@ def add_graphs_data_to_table(dict_arr):
 def get_hours_samples_dictionary(seconds_keys_samples_dict):
     hours_keys_samples_dict = dict()
     for key, value in seconds_keys_samples_dict.items():
-        new_key = key/3600
-        hours_keys_samples_dict[new_key] = value
+        new_key = int(key)/3600
+        hours_keys_samples_dict[new_key] = int(value)
 
     return hours_keys_samples_dict
 
@@ -103,6 +103,8 @@ def init_graphs_data_table():
 def start_program():
     init_graphs_data_table()
     fill_table_from_csv(csv_file_path=file_path)
+
+    cursor.execute("SELECT serializedData FROM graphs_data")
 
 
 if __name__ == "__main__":
