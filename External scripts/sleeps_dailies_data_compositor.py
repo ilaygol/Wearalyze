@@ -1,7 +1,6 @@
 import json
 import logging
 import sqlite3
-import pickle
 import datetime
 
 # comments -------------------------------
@@ -10,7 +9,7 @@ import datetime
 
 logging.basicConfig(level=logging.DEBUG)
 # ../Extras/readings.db
-connector = sqlite3.connect("../Extras/readings.db")
+connector = sqlite3.connect("../Extras/sleeps_dailies_data.db")
 cursor = connector.cursor()
 
 file_name = "../Extras/readings-clean.csv"
@@ -40,23 +39,8 @@ mapping_dict = {'6ad70fdf-64d6-45aa-a138-db324bbc0412': '101', '6214ab65-2483-41
 # ---------------------------------------------------------------------
 
 # ------------------------Attributes arrays ---------------------------
-manual_upd_act_keys = ['userId', 'userAccessToken', 'summaryId', 'activityId', 'activityName', 'durationInSeconds', 'startTimeInSeconds', 'startTimeOffsetInSeconds', 'activityType', 'averageHeartRateInBeatsPerMinute', 'averageRunCadenceInStepsPerMinute', 'averageSpeedInMetersPerSecond', 'averagePaceInMinutesPerKilometer', 'activeKilocalories', 'deviceName', 'distanceInMeters', 'maxHeartRateInBeatsPerMinute', 'maxPaceInMinutesPerKilometer', 'maxRunCadenceInStepsPerMinute', 'maxSpeedInMetersPerSecond', 'manual']
-act_files_keys = ['userId', 'userAccessToken', 'summaryId', 'fileType', 'callbackURL', 'startTimeInSeconds', 'activityId', 'activityName', 'manual']
-sleeps_keys = ['userId', 'userAccessToken', 'summaryId', 'calendarDate', 'durationInSeconds', 'startTimeInSeconds', 'validation']
-pulse_keys = ['userId', 'userAccessToken', 'summaryId', 'calendarDate', 'startTimeInSeconds', 'durationInSeconds', 'startTimeOffsetInSeconds', 'timeOffsetSpo2Values', 'onDemand']
-permission_keys = ['userId', 'userAccessToken', 'summaryId', 'permissions', 'changeTimeInSeconds']
-# not all lines has 'averageHeartRateInBeatsPerMinute' attribute, set default to 0 (same lines has 0 steps - logic)
 dailies_keys = ['userId', 'userAccessToken', 'summaryId', 'calendarDate', 'durationInSeconds', 'steps', 'averageHeartRateInBeatsPerMinute', 'averageStressLevel']
-metrics_keys = ['userId', 'userAccessToken', 'summaryId', 'calendarDate', 'vo2Max', 'fitnessAge', 'enhanced']
-move_iq_act_keys = ['userId', 'userAccessToken', 'summaryId', 'calendarDate', 'startTimeInSeconds', 'durationInSeconds', 'activityType', 'offsetInSeconds']
-body_comps_keys = ['userId', 'userAccessToken', 'summaryId', 'weightInGrams', 'measurementTimeInSeconds', 'measurementTimeOffsetInSeconds']
-# not all lines has 'timeOffsetBodyBatteryValues' attribute, set default to empty dict
-stress_details_keys = ['userId', 'userAccessToken', 'summaryId', 'startTimeInSeconds', 'startTimeOffsetInSeconds', 'durationInSeconds', 'calendarDate', 'timeOffsetStressLevelValues', 'timeOffsetBodyBatteryValues']
-all_day_respiration_keys = ['userId', 'userAccessToken', 'summaryId', 'startTimeInSeconds', 'durationInSeconds', 'startTimeOffsetInSeconds', 'timeOffsetEpochToBreaths']
-# not all lines has 'durationInSeconds' 'activeKilocalories' 'maxHeartRateInBeatsPerMinute' attributes, set default to 0
-activities_keys = ['userId', 'userAccessToken', 'summaryId', 'activityId', 'activityName', 'durationInSeconds', 'startTimeInSeconds', 'startTimeOffsetInSeconds', 'activityType', 'averageHeartRateInBeatsPerMinute', 'activeKilocalories', 'deviceName', 'maxHeartRateInBeatsPerMinute']
-activity_details_keys = ['userId', 'userAccessToken', 'summaryId', 'activityId', 'summary', 'samples', 'laps']
-epochs_keys = ['userId', 'userAccessToken', 'summaryId', 'activityType', 'activeKilocalories', 'steps', 'distanceInMeters', 'durationInSeconds', 'activeTimeInSeconds', 'startTimeInSeconds', 'startTimeOffsetInSeconds', 'met', 'intensity', 'meanMotionIntensity', 'maxMotionIntensity']
+sleeps_keys = ['userId', 'userAccessToken', 'summaryId', 'calendarDate', 'durationInSeconds', 'startTimeInSeconds', 'validation']
 # ---------------------------------------------------------------------
 
 
