@@ -5,12 +5,13 @@ import pickle
 import datetime
 
 logging.basicConfig(level=logging.DEBUG)
-# ../Extras/readings.db
-connector = sqlite3.connect(":memory:")
+# ../Extras/graphs_data.db
+connector = sqlite3.connect("../Extras/graphs_data.db")
 cursor = connector.cursor()
+
 file_path = "../Extras/readings-debug.csv"
 
-reading_lines_count = 1
+reading_lines_count = 0
 all_cmd = set()
 
 # ------userId to shortUserId dictionary (for mapping) ----------------
@@ -50,14 +51,19 @@ def insert_new_line_to_database(input_cmd, table, user_id):
 def add_graphs_data_to_table(dict_arr):
     for i in range(len(dict_arr)):
         v_dict = dict_arr[i]
-        if len(v_dict.get('timeOffsetHeartRateSamples')) != 0:
-            user_id = mapping_dict.get(v_dict.get('userAccessToken'), "999")
-            hours_keys_samples_dict = get_hours_samples_dictionary(v_dict.get('timeOffsetHeartRateSamples'))
+        samples_dict = v_dict.get('timeOffsetHeartRateSamples', {})
+        user_id = mapping_dict.get(v_dict.get('userAccessToken'), "999")
+        samples_date = v_dict.get('calendarDate', '0')
 
-            cmd = ("INSERT INTO graphs_data VALUES (?,?,?,?)",
-                   (user_id, v_dict.get('calendarDate', '0'), 'HeartRateSamples', pickle.dumps(hours_keys_samples_dict)))
+        if len(samples_dict) != 0:
+            hours_keys_samples_dict = get_hours_samples_dictionary(samples_dict)
+            cmd = ("INSERT INTO graphs_data_unsorted VALUES (?,?,?,?)",
+                   (user_id, samples_date, 'HeartRateSamples', pickle.dumps(hours_keys_samples_dict)))
 
-            insert_new_line_to_database(cmd, 'graphs_data', user_id)
+            insert_new_line_to_database(cmd, 'graphs_data_unsorted', user_id)
+        else:
+            logging.debug(
+                "samples dictionary for user "+user_id+" in date "+samples_date+" was found empty")
 
 
 def get_hours_samples_dictionary(seconds_keys_samples_dict):
@@ -90,21 +96,31 @@ def fill_table_from_csv(csv_file_path=file_path):
     logging.info("database was filled with '" + file_path + "' file data successfully")
 
 
-def init_graphs_data_table():
-    cursor.execute("""CREATE TABLE graphs_data (
+def init_unsorted_graphs_data_table():
+    cursor.execute("""CREATE TABLE graphs_data_unsorted (
                                     userId text,
                                     calendarDate text,
                                     graphType text,
                                     serializedData text)""")
     connector.commit()
-    logging.debug("graphs_data table was created successfully")
+    logging.debug("graphs_data_unsorted table was created successfully")
+
+
+def create_sorted_table():
+    cursor.execute("""CREATE TABLE graphs_data
+                          AS 
+                          SELECT userId AS id, calendarDate AS date, graphType AS graph_type, serializedData AS serialized_data
+                          FROM graphs_data_unsorted
+                          WHERE userId != '999'
+                          ORDER BY userId asc, calendarDate asc""")
+    connector.commit()
+    logging.info("graphs_data table was created successfully")
 
 
 def start_program():
-    init_graphs_data_table()
+    init_unsorted_graphs_data_table()
     fill_table_from_csv(csv_file_path=file_path)
-
-    cursor.execute("SELECT serializedData FROM graphs_data")
+    create_sorted_table()
 
 
 if __name__ == "__main__":
