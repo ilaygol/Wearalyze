@@ -48,23 +48,24 @@ def insert_new_line_to_database(input_cmd, table, user_id):
             reading_lines_count) + ")")
 
 
-def add_graphs_data_to_table(dict_arr):
+def add_graphs_data_to_table(dict_arr, graph_type, samples_attribute_name, table_name):
     for i in range(len(dict_arr)):
         v_dict = dict_arr[i]
-        samples_dict = v_dict.get('timeOffsetHeartRateSamples', {})
+        samples_dict = v_dict.get(samples_attribute_name, {})
         user_id = mapping_dict.get(v_dict.get('userAccessToken'), "999")
         measurement_duration_seconds = int(v_dict.get('durationInSeconds', 0))
         samples_date = v_dict.get('calendarDate', '0')
 
         if len(samples_dict) != 0:
             hours_keys_samples_dict = get_hours_samples_dictionary(samples_dict)
-            cmd = ("INSERT INTO graphs_data_unsorted VALUES (?,?,?,?,?)",
-                   (user_id, samples_date, measurement_duration_seconds, 'HeartRateSamples', pickle.dumps(hours_keys_samples_dict)))
+            cmd = ("INSERT INTO "+table_name+" VALUES (?,?,?,?,?)",
+                   (user_id, samples_date, measurement_duration_seconds, graph_type,
+                    pickle.dumps(hours_keys_samples_dict)))
 
-            insert_new_line_to_database(cmd, 'graphs_data_unsorted', user_id)
+            insert_new_line_to_database(cmd, table_name, user_id)
         else:
             logging.debug(
-                "samples dictionary for user "+user_id+" in date "+samples_date+" was found empty")
+                graph_type + " samples dictionary for user " + user_id + " in date " + samples_date + " was found empty")
 
 
 def get_hours_samples_dictionary(seconds_keys_samples_dict):
@@ -76,7 +77,7 @@ def get_hours_samples_dictionary(seconds_keys_samples_dict):
     return hours_keys_samples_dict
 
 
-def fill_table_from_csv(csv_file_path=file_path):
+def fill_tables_from_csv(csv_file_path=file_path):
     global reading_lines_count
 
     with open(file_path, "r") as file:
@@ -88,7 +89,9 @@ def fill_table_from_csv(csv_file_path=file_path):
             try:
                 match measurement_attribute:
                     case "dailies":
-                        add_graphs_data_to_table(v_dict_arr)
+                        add_graphs_data_to_table(v_dict_arr, 'HeartRate', 'timeOffsetHeartRateSamples', 'heartrate_graphs_data_unsorted')
+                    case "stressDetails":
+                        add_graphs_data_to_table(v_dict_arr, 'Stress', 'timeOffsetStressLevelValues', 'stress_graphs_data_unsorted')
             except KeyError:
                 reading_lines_count += 1
                 logging.error(
@@ -97,32 +100,65 @@ def fill_table_from_csv(csv_file_path=file_path):
     logging.info("database was filled with '" + file_path + "' file data successfully")
 
 
-def init_unsorted_graphs_data_table():
-    cursor.execute("""CREATE TABLE graphs_data_unsorted (
+def init_unsorted_heartrate_graphs_data_table():
+    cursor.execute("""CREATE TABLE heartrate_graphs_data_unsorted (
                                     userId text,
                                     calendarDate text,
                                     durationInSeconds integer,
                                     graphType text,
                                     serializedData BLOB)""")
     connector.commit()
-    logging.debug("graphs_data_unsorted table was created successfully")
+    logging.debug("heartrate_graphs_data_unsorted table was created successfully")
 
 
-def create_sorted_table():
-    cursor.execute("""CREATE TABLE graphs_data
-                          AS 
-                          SELECT userId AS id, calendarDate AS date, graphType AS graph_type, serializedData AS serialized_data
-                          FROM graphs_data_unsorted
-                          WHERE userId != '999' AND durationInSeconds = 86400
-                          ORDER BY userId asc, calendarDate asc""")
+def init_unsorted_stress_graphs_data_table():
+    cursor.execute("""CREATE TABLE stress_graphs_data_unsorted (
+                                    userId text,
+                                    calendarDate text,
+                                    durationInSeconds integer,
+                                    graphType text,
+                                    serializedData BLOB)""")
     connector.commit()
-    logging.info("graphs_data table was created successfully")
+    logging.debug("stress_graphs_data_unsorted table was created successfully")
+
+
+def create_sorted_heartrate_table():
+    cursor.execute("""CREATE TABLE heartrate_graphs_data
+                              AS 
+                              SELECT userId AS id, calendarDate AS date, graphType AS graph_type, serializedData AS serialized_data
+                              FROM heartrate_graphs_data_unsorted
+                              WHERE userId != '999' AND durationInSeconds = 86400
+                              ORDER BY userId asc, calendarDate asc""")
+    connector.commit()
+    logging.info("heartrate_graphs_data table was created successfully")
+
+
+def create_sorted_stress_table():
+    cursor.execute("""CREATE TABLE stress_graphs_data
+                                  AS 
+                                  SELECT userId AS id, calendarDate AS date, graphType AS graph_type, serializedData AS serialized_data
+                                  FROM stress_graphs_data_unsorted
+                                  WHERE userId != '999' AND durationInSeconds = 86400
+                                  ORDER BY userId asc, calendarDate asc""")
+    connector.commit()
+    logging.info("stress_graphs_data table was created successfully")
+
+
+def create_sorted_tables():
+    create_sorted_heartrate_table()
+    create_sorted_stress_table()
+
+
+def init_graphs_data_tables():
+    init_unsorted_heartrate_graphs_data_table()
+    init_unsorted_stress_graphs_data_table()
 
 
 def start_program():
-    init_unsorted_graphs_data_table()
-    fill_table_from_csv(csv_file_path=file_path)
-    create_sorted_table()
+    init_graphs_data_tables()
+
+    fill_tables_from_csv(csv_file_path=file_path)
+    create_sorted_tables()
 
 
 if __name__ == "__main__":
