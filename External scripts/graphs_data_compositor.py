@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.DEBUG)
 connector = sqlite3.connect("../Extras/graphs_data.db")
 cursor = connector.cursor()
 
-file_path = "../Extras/readings-debug.csv"
+file_path = "../Extras/readings-clean.csv"
 
 reading_lines_count = 0
 all_cmd = set()
@@ -53,12 +53,13 @@ def add_graphs_data_to_table(dict_arr):
         v_dict = dict_arr[i]
         samples_dict = v_dict.get('timeOffsetHeartRateSamples', {})
         user_id = mapping_dict.get(v_dict.get('userAccessToken'), "999")
+        measurement_duration_seconds = int(v_dict.get('durationInSeconds', 0))
         samples_date = v_dict.get('calendarDate', '0')
 
         if len(samples_dict) != 0:
             hours_keys_samples_dict = get_hours_samples_dictionary(samples_dict)
-            cmd = ("INSERT INTO graphs_data_unsorted VALUES (?,?,?,?)",
-                   (user_id, samples_date, 'HeartRateSamples', pickle.dumps(hours_keys_samples_dict)))
+            cmd = ("INSERT INTO graphs_data_unsorted VALUES (?,?,?,?,?)",
+                   (user_id, samples_date, measurement_duration_seconds, 'HeartRateSamples', pickle.dumps(hours_keys_samples_dict)))
 
             insert_new_line_to_database(cmd, 'graphs_data_unsorted', user_id)
         else:
@@ -100,8 +101,9 @@ def init_unsorted_graphs_data_table():
     cursor.execute("""CREATE TABLE graphs_data_unsorted (
                                     userId text,
                                     calendarDate text,
+                                    durationInSeconds integer,
                                     graphType text,
-                                    serializedData text)""")
+                                    serializedData BLOB)""")
     connector.commit()
     logging.debug("graphs_data_unsorted table was created successfully")
 
@@ -111,7 +113,7 @@ def create_sorted_table():
                           AS 
                           SELECT userId AS id, calendarDate AS date, graphType AS graph_type, serializedData AS serialized_data
                           FROM graphs_data_unsorted
-                          WHERE userId != '999'
+                          WHERE userId != '999' AND durationInSeconds = 86400
                           ORDER BY userId asc, calendarDate asc""")
     connector.commit()
     logging.info("graphs_data table was created successfully")
